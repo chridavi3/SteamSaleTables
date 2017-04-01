@@ -557,7 +557,7 @@ namespace SteamSaleTables
         /// </summary>
         private static void UpdateRedditThread()
         {
-            TableProcessor.UpdateReddit(_groups, _currencies, _reddit, _subreddit);
+            TableProcessor.UpdateReddit(_groups, _currencies, _reddit, _subreddit, _defaultCurrency);
             FileManager.WriteAppData(_apps.Values.ToArray());
 
             _thUpdateRedditFinished = true;

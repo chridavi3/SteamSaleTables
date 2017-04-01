@@ -71,11 +71,13 @@ namespace SteamSaleTables
         /// <summary>
         /// Processes a template file using app data. 
         /// </summary>
-        /// <param name="groups"></param>
-        /// <param name="currencies"></param>
-        /// <param name="reddit"></param>
+        /// <param name="groups">Groups of subgroups of apps to use as data</param>
+        /// <param name="currencies">Currencies to record</param>
+        /// <param name="reddit">Reddit account to login with</param>
+        /// <param name="subreddit">Subreddit to save to</param>
+        /// <param name="defaultCurrency">Default currency</param>
         public static void UpdateReddit(SortedList<string, SortedList<string, SortedList<string, App>>> groups,
-            List<Currency> currencies, Reddit reddit, string subreddit)
+            List<Currency> currencies, Reddit reddit, string subreddit, Currency defaultCurrency)
         {
             if (groups == null)
             {
@@ -84,6 +86,61 @@ namespace SteamSaleTables
             try
             {
                 var sub = reddit.GetSubreddit("/r/" + subreddit);
+
+                {
+                    var mainTemplate = FileManager.ReadTemplateLines();
+
+                    foreach (var currency in currencies)
+                    {
+                        var page = "index";
+
+                        var str = string.Empty;
+                        foreach (var curr in currencies)
+                        {
+                            if (!curr.Equals(currency))
+                            {
+                                str += string.Format("1. [{0}](/r/{1}/wiki/{0}/{2})\n", curr.Abbreviation, subreddit,
+                                    page);
+                            }
+                            else
+                            {
+                                str += string.Format("1. {0}\n", curr.Abbreviation);
+                            }
+                        }
+
+                        str += '\n';
+
+                        str += mainTemplate.Aggregate(string.Empty,
+                            (current, line) => current + line.Replace("{{{CUR}}}", currency.Abbreviation) + '\n');
+
+                        sub.Wiki.EditPage(currency.Abbreviation + '/' + page, str);
+                    }
+
+                    {
+                        var page = "/index";
+
+                        var str = string.Empty;
+                        foreach (var curr in currencies)
+                        {
+                            if (!curr.Equals(defaultCurrency))
+                            {
+                                str += string.Format("1. [{0}](/r/{1}/wiki/{0}/{2})\n", curr.Abbreviation, subreddit,
+                                    page);
+                            }
+                            else
+                            {
+                                str += string.Format("1. {0}\n", curr.Abbreviation);
+                            }
+                        }
+
+                        str += '\n';
+
+                        str += mainTemplate.Aggregate(string.Empty,
+                            (current, line) => current + line.Replace("{{{CUR}}}", defaultCurrency.Abbreviation) + '\n');
+
+                        sub.Wiki.EditPage(page, str);
+                    }
+                }
 
                 var groupNames = groups.Keys;
 
@@ -97,10 +154,29 @@ namespace SteamSaleTables
 
                         foreach (var currency in currencies)
                         {
-                            var str = input.Aggregate(string.Empty,
+                            var page = path.Replace('\\', '/');
+
+                            var str = string.Empty;
+                            foreach (var curr in currencies)
+                            {
+                                if (!curr.Equals(currency))
+                                {
+                                    str += string.Format("1. [{0}](/r/{1}/wiki/{0}/{2})\n", curr.Abbreviation, subreddit,
+                                        page);
+                                }
+                                else
+                                {
+                                    str += string.Format("1. {0}\n", curr.Abbreviation);
+                                }
+                            }
+
+                            str += '\n';
+
+                            
+                            str += input.Aggregate(string.Empty,
                                 (current, line) => current + ProcessLine(line, groups[groupName], currency) + '\n');
 
-                            sub.Wiki.EditPage((currency.Abbreviation + '/' + path).Replace('\\', '/'), str);
+                            sub.Wiki.EditPage(currency.Abbreviation + '/' + page, str);
                         }
                     }
                 }
@@ -122,6 +198,8 @@ namespace SteamSaleTables
         /// <returns>The processed line</returns>
         public static string ProcessLine(string line, SortedList<string, SortedList<string, App>> subgroups, Currency currency)
         {
+            line = line.Replace("{{{CUR}}}", currency.Abbreviation);
+
             // Check to see if the line needs to be formatted
             if (!line.StartsWith("|||") || !line.EndsWith("|||"))
             {

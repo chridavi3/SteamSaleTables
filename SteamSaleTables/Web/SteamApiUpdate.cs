@@ -43,7 +43,7 @@ namespace SteamSaleTables.Web
 
                     if (appData == null || appData.success == false)
                     {
-                        return null;
+                        continue;
                     }
 
                     appData = appData.data;
@@ -56,7 +56,7 @@ namespace SteamSaleTables.Web
                 }
                 catch (WebException)
                 {
-                    return null;
+                    continue;
                 }
 
             }
@@ -98,13 +98,13 @@ namespace SteamSaleTables.Web
 
                     if (appData == null || appData.success == false)
                     {
-                        return;
+                        continue;
                     }
 
                     var priceOverview = appData.data.price_overview;
 
 
-                    var priceData = app.PriceInfo.ContainsKey(currency.Abbreviation)
+                    var priceData = app.PriceInfo.ContainsKey(currency.Abbreviation.ToLower())
                         ? app.PriceInfo[currency.Abbreviation]
                         : new PriceData();
 

@@ -147,6 +147,8 @@ namespace SteamSaleTables.Forms
             var form = new FrmSelectCurrency();
             form.ShowDialog();
 
+            if (cboSubgroups.SelectedItem == null) return;
+
             var apps = SteamTableManager.GetApps(cboGroups.SelectedItem.ToString(), cboSubgroups.SelectedItem.ToString());
 
             lvwApps.Items.Clear();

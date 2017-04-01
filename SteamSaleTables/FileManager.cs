@@ -526,11 +526,11 @@ namespace SteamSaleTables
         /// </summary>
         /// <param name="path">Path to subdirectory containing the template</param>
         /// <returns>An array of all lines in the template</returns>
-        public static string[] ReadTemplateLines(string path)
+        public static string[] ReadTemplateLines(string path = "")
         {
             var templateFilePath = MainPath + path + '\\' + TemplateFile;
 
-            return File.ReadAllLines(templateFilePath, Encoding.UTF8);
+            return File.Exists(templateFilePath) ? File.ReadAllLines(templateFilePath, Encoding.UTF8) : null;
         }
 
         /// <summary>
